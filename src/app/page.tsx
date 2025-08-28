@@ -56,7 +56,7 @@ export default function LibroDiario() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-center mb-6">📖 Libro Diario Contable</h2>
+      <h2 className="text-2xl font-bold text-center mb-6">📖 Libro Diario Contablesa</h2>
       <Link href="sumasysaldo" className="text-blue-600 hover:underline">
         Ver Resumen de Cuentas →
       </Link>
