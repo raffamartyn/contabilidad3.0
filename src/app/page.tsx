@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import api from "@/api";
 import apid from "@/apid";
 import apih from "@/apih";
@@ -8,7 +8,8 @@ import type { Data, Datad, Datah } from "@/type";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-export default function LibroDiario() {
+// 🔹 Componente que usa useSearchParams
+function LibroDiarioContent() {
   const [transactions, setTransactions] = useState<Data[]>([]);
   const [debits, setDebits] = useState<Datad[]>([]);
   const [credits, setCredits] = useState<Datah[]>([]);
@@ -22,7 +23,7 @@ export default function LibroDiario() {
 
   // Obtener parámetros de búsqueda
   const searchParams = useSearchParams();
-  const idMovimiento = searchParams.get('idMovimiento');
+  const idMovimiento = searchParams.get("idMovimiento");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,7 +57,7 @@ export default function LibroDiario() {
     if (highlightedId) {
       setTimeout(() => {
         const element = document.getElementById(`movimiento-${highlightedId}`);
-        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 500);
     }
   }, [highlightedId, transactions]);
@@ -67,7 +68,9 @@ export default function LibroDiario() {
 
     // Convertir "DD/MM/YYYY" a "YYYY-MM-DD"
     const [day, month, year] = tx.FECHA.split("/").map(Number);
-    const formattedDate = new Date(year, month - 1, day).toISOString().split("T")[0];
+    const formattedDate = new Date(year, month - 1, day)
+      .toISOString()
+      .split("T")[0];
 
     return formattedDate >= startDate && formattedDate <= endDate;
   });
@@ -79,27 +82,30 @@ export default function LibroDiario() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">📖 Libro Diario Contable</h2>
-        <Link 
-          href="sumasysaldo" 
-          className="text-blue-600 hover:underline flex items-center"
-        >
-          Ver Sumas y Saldos →
-        </Link>
-        <Link 
-          href="estados" 
-          className="text-blue-600 hover:underline flex items-center"
-        >
-          Estados Financiero →
-        </Link>
+        <div className="flex gap-4">
+          <Link
+            href="sumasysaldo"
+            className="text-blue-600 hover:underline flex items-center"
+          >
+            Ver Sumas y Saldos →
+          </Link>
+          <Link
+            href="estados"
+            className="text-blue-600 hover:underline flex items-center"
+          >
+            Estados Financieros →
+          </Link>
+        </div>
       </div>
-      
 
       {/* Filtro por fecha */}
       <div className="bg-gray-50 p-4 rounded-lg mb-6">
         <h3 className="font-semibold mb-3">🔎 Filtros</h3>
         <div className="flex flex-wrap gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha inicial</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Fecha inicial
+            </label>
             <input
               type="date"
               value={startDate}
@@ -108,7 +114,9 @@ export default function LibroDiario() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha final</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Fecha final
+            </label>
             <input
               type="date"
               value={endDate}
@@ -133,7 +141,7 @@ export default function LibroDiario() {
       {filteredTransactions.length === 0 ? (
         <div className="text-center py-10 bg-white rounded-lg shadow">
           <p className="text-gray-500">No se encontraron transacciones</p>
-          {startDate || endDate ? (
+          {(startDate || endDate) && (
             <button
               onClick={() => {
                 setStartDate("");
@@ -143,16 +151,21 @@ export default function LibroDiario() {
             >
               Mostrar todas las transacciones
             </button>
-          ) : null}
+          )}
         </div>
       ) : (
         filteredTransactions.map((tx) => {
           const relatedDebits = debits.filter((d) => d.IDDEBE === tx.id);
           const relatedCredits = credits.filter((h) => h.IDHABER === tx.id);
 
-          // Calcular totales de Debe y Haber
-          const totalDebe = relatedDebits.reduce((sum, d) => sum + d.CANTIDADD, 0);
-          const totalHaber = relatedCredits.reduce((sum, h) => sum + h.CANTIDADH, 0);
+          const totalDebe = relatedDebits.reduce(
+            (sum, d) => sum + d.CANTIDADD,
+            0
+          );
+          const totalHaber = relatedCredits.reduce(
+            (sum, h) => sum + h.CANTIDADH,
+            0
+          );
 
           return (
             <div
@@ -166,7 +179,9 @@ export default function LibroDiario() {
             >
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h3 className="text-lg font-semibold">Transacción #{tx.numero}</h3>
+                  <h3 className="text-lg font-semibold">
+                    Transacción #{tx.numero}
+                  </h3>
                   <p className="text-gray-500">
                     <span className="font-medium">Fecha:</span> {tx.FECHA}
                   </p>
@@ -177,7 +192,8 @@ export default function LibroDiario() {
               </div>
 
               <p className="text-gray-700 mb-4">
-                <span className="font-medium">Descripción:</span> {tx.descripcion}
+                <span className="font-medium">Descripción:</span>{" "}
+                {tx.descripcion}
               </p>
 
               <div className="overflow-x-auto">
@@ -186,22 +202,20 @@ export default function LibroDiario() {
                     <tr className="bg-gray-100 text-gray-700 text-sm">
                       <th className="border p-2 text-left">ID Movimiento</th>
                       <th className="border p-2 text-left">Cuenta</th>
-                      
                       <th className="border p-2 text-right">Debe</th>
                       <th className="border p-2 text-right">Haber</th>
                     </tr>
                   </thead>
                   <tbody>
                     {relatedDebits.map((debit) => (
-                      <tr key={`${tx.id}-D-${debit.IDDEBE}`} className="hover:bg-green-50">
-                        
-                          <td className="border p-2 text-sm text-gray-600">{debit.IDDEBE}</td>
-                        <td className="border p-2">
-                          
-                            {debit.CUENTAD}
-                          
+                      <tr
+                        key={`${tx.id}-D-${debit.IDDEBE}`}
+                        className="hover:bg-green-50"
+                      >
+                        <td className="border p-2 text-sm text-gray-600">
+                          {debit.IDDEBE}
                         </td>
-                        
+                        <td className="border p-2">{debit.CUENTAD}</td>
                         <td className="border p-2 text-right text-green-600 font-medium">
                           ${debit.CANTIDADD.toLocaleString()}
                         </td>
@@ -210,15 +224,14 @@ export default function LibroDiario() {
                     ))}
 
                     {relatedCredits.map((credit) => (
-                      <tr key={`${tx.id}-H-${credit.IDHABER}`} className="hover:bg-red-50">
-                        <td className="border p-2 text-sm text-gray-600">{credit.IDHABER}</td>
-                        <td className="border p-2">
-                        
-                          
-                            {credit.CUENTAH}
-                          
+                      <tr
+                        key={`${tx.id}-H-${credit.IDHABER}`}
+                        className="hover:bg-red-50"
+                      >
+                        <td className="border p-2 text-sm text-gray-600">
+                          {credit.IDHABER}
                         </td>
-                        
+                        <td className="border p-2">{credit.CUENTAH}</td>
                         <td className="border p-2 text-right">-</td>
                         <td className="border p-2 text-right text-red-600 font-medium">
                           ${credit.CANTIDADH.toLocaleString()}
@@ -226,13 +239,17 @@ export default function LibroDiario() {
                       </tr>
                     ))}
 
-                    {relatedDebits.length === 0 && relatedCredits.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="border p-2 text-center text-gray-500">
-                          No hay movimientos registrados
-                        </td>
-                      </tr>
-                    )}
+                    {relatedDebits.length === 0 &&
+                      relatedCredits.length === 0 && (
+                        <tr>
+                          <td
+                            colSpan={6}
+                            className="border p-2 text-center text-gray-500"
+                          >
+                            No hay movimientos registrados
+                          </td>
+                        </tr>
+                      )}
 
                     {/* Totales */}
                     <tr className="bg-gray-50 font-bold">
@@ -269,5 +286,14 @@ export default function LibroDiario() {
         })
       )}
     </div>
+  );
+}
+
+// 🔹 Export con Suspense para proteger useSearchParams
+export default function LibroDiario() {
+  return (
+    <Suspense fallback={<p className="text-center text-gray-600">Cargando...</p>}>
+      <LibroDiarioContent />
+    </Suspense>
   );
 }
